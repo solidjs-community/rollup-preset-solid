@@ -1,0 +1,42 @@
+{
+  "name": "rollup-preset-solid",
+  "version": "0.0.1",
+  "description": "Rollup preset for solid libraries",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "node": "./dist/cjs/index.js",
+    "default": "./dist/cjs/index.js",
+    "require": "./dist/cjs/index.js"
+  },
+  "scripts": {
+    "build": "node build",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "rollup",
+    "preset",
+    "solidjs"
+  ],
+  "author": "Alexandre Mouton-Brady",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.13.10",
+    "@babel/preset-typescript": "^7.13.0",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-node-resolve": "^11.2.0",
+    "babel-preset-solid": "^0.24.13",
+    "esbuild": "^0.9.2",
+    "merge-anything": "^4.0.1",
+    "rollup": "^2.41.2",
+    "rollup-plugin-terser": "^7.0.2",
+    "typescript": "^4.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.34"
+  }
+}
