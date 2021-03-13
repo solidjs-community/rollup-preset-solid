@@ -1,11 +1,13 @@
+import ts from "typescript";
+import { rmSync } from "fs";
+import * as c from "colorette";
 import { RollupOptions } from "rollup";
 import { merge } from "merge-anything";
-import { resolve, dirname } from "path";
+import { resolve, dirname, parse } from "path";
 import { babel } from "@rollup/plugin-babel";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
-import ts from "typescript";
 
-function findClosestPackageJson(start = __dirname, level = 0) {
+function findClosestPackageJson(start = process.cwd(), level = 0) {
   try {
     const path = resolve(start, "package.json");
     return require(path);
@@ -15,11 +17,21 @@ function findClosestPackageJson(start = __dirname, level = 0) {
 }
 
 export default function withSolid(options: RollupOptions = {}) {
-  const pkg = findClosestPackageJson();
+  const currentDir = process.cwd();
+  const pkg = findClosestPackageJson(currentDir);
   const extensions = [".js", ".ts", ".jsx", ".tsx"];
 
+  const src = pkg.source || options.input;
+
+  if (!src) {
+    throw new Error(
+      "No input source found. You can add it to the `source` property in your `package.json` or feed it into the `input` option in the `withConfig` function."
+    );
+  }
+
   const defaultOptions: RollupOptions = {
-    input: resolve(pkg.source),
+    input: resolve(src),
+    external: ["solid-js", "solid-js/web"],
     output: [
       {
         format: "cjs",
@@ -33,6 +45,15 @@ export default function withSolid(options: RollupOptions = {}) {
       },
     ],
     plugins: [
+      {
+        name: "clean",
+        buildStart() {
+          rmSync(resolve(currentDir, "dist"), {
+            force: true,
+            recursive: true,
+          });
+        },
+      },
       babel({
         extensions,
         babelHelpers: "bundled",
@@ -40,40 +61,53 @@ export default function withSolid(options: RollupOptions = {}) {
       }),
       nodeResolve({ extensions }),
       {
-        name: "ts:source",
+        name: "ts",
         buildEnd() {
-          const program = ts.createProgram([resolve(pkg.source)], {
+          const program = ts.createProgram([resolve(src)], {
             target: ts.ScriptTarget.ESNext,
             module: ts.ModuleKind.ESNext,
             moduleResolution: ts.ModuleResolutionKind.NodeJs,
             jsx: ts.JsxEmit.Preserve,
-            outDir: "dist/source",
-            declaration: false,
             jsxImportSource: "solid-js",
             allowSyntheticDefaultImports: true,
             esModuleInterop: true,
+            outDir: "dist/source",
+            declarationDir: "dist/types",
+            declaration: true,
+            allowJs: true,
           });
 
           program.emit();
         },
       },
       {
-        name: "ts:types",
+        name: "instructions",
         buildEnd() {
-          const program = ts.createProgram([resolve(pkg.source)], {
-            target: ts.ScriptTarget.ESNext,
-            module: ts.ModuleKind.ESNext,
-            moduleResolution: ts.ModuleResolutionKind.NodeJs,
-            jsx: ts.JsxEmit.Preserve,
-            outDir: "dist/source",
-            declaration: true,
-            emitDeclarationOnly: true,
-            jsxImportSource: "solid-js",
-            allowSyntheticDefaultImports: true,
-            esModuleInterop: true,
-          });
+          const { name } = parse(src);
 
-          program.emit();
+          const example = {
+            files: ["dist"],
+            main: `dist/cjs/${name}.js`,
+            module: `dist/esm/${name}.js`,
+            types: `dist/types/${name}.d.ts`,
+            exports: {
+              ".": {
+                solid: `./dist/source/${name}.jsx`,
+                import: `./dist/esm/${name}.js`,
+                browser: `./dist/esm/${name}.js`,
+                require: `./dist/cjs/${name}.js`,
+                node: `./dist/cjs/${name}.js`,
+              },
+            },
+          };
+
+          console.log();
+          console.log(
+            c.cyan(c.bold("Add the following in your `package.json`:"))
+          );
+          console.log();
+          console.log(c.green(JSON.stringify(example, null, 2)));
+          console.log();
         },
       },
     ],
