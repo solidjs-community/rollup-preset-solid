@@ -22,6 +22,10 @@ export default function withSolid(options: RollupOptions = {}) {
   const extensions = [".js", ".ts", ".jsx", ".tsx"];
 
   const src = pkg.source || options.input;
+  const external = [
+    ...Object.keys(pkg.dependencies || {}),
+    ...Object.keys(pkg.peerDependencies || {}),
+  ];
 
   if (!src) {
     throw new Error(
@@ -31,7 +35,7 @@ export default function withSolid(options: RollupOptions = {}) {
 
   const defaultOptions: RollupOptions = {
     input: resolve(src),
-    external: ["solid-js", "solid-js/web"],
+    external: ["solid-js", "solid-js/web", ...external],
     output: [
       {
         format: "cjs",
