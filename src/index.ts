@@ -2,9 +2,9 @@ import ts from "typescript";
 import { rmSync } from "fs";
 import * as c from "colorette";
 import { RollupOptions } from "rollup";
-import { merge } from "merge-anything";
-import { resolve, dirname, parse } from "path";
 import { babel } from "@rollup/plugin-babel";
+import { resolve, dirname, parse } from "path";
+import { mergeAndConcat } from "merge-anything";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 
 function findClosestPackageJson(start = process.cwd(), level = 0) {
@@ -117,5 +117,5 @@ export default function withSolid(options: RollupOptions = {}) {
     ],
   };
 
-  return merge(options, defaultOptions);
+  return mergeAndConcat(options, defaultOptions);
 }
