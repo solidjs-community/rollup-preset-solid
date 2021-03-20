@@ -55,7 +55,7 @@ function processOptions(options: Options) {
   ];
 
   const output: OutputOptions[] = outputs.filter(({ format }) =>
-    options.targets.includes(format as ModuleFormat)
+    targets.includes(format as ModuleFormat)
   );
 
   const defaultOptions: Options = {
