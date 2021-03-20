@@ -1,11 +1,12 @@
 import ts from "typescript";
 import { rmSync } from "fs";
 import * as c from "colorette";
-import { RollupOptions } from "rollup";
 import { babel } from "@rollup/plugin-babel";
+import { terser } from "rollup-plugin-terser";
 import { resolve, dirname, parse } from "path";
 import { mergeAndConcat } from "merge-anything";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import { ModuleFormat, OutputOptions, RollupOptions } from "rollup";
 
 function findClosestPackageJson(start = process.cwd(), level = 0) {
   try {
@@ -16,8 +17,9 @@ function findClosestPackageJson(start = process.cwd(), level = 0) {
   }
 }
 
-export default function withSolid(options: RollupOptions = {}) {
+function processOptions(options: Options) {
   const currentDir = process.cwd();
+  const targets = options.targets || ["esm", "umd"];
   const pkg = findClosestPackageJson(currentDir);
   const extensions = [".js", ".ts", ".jsx", ".tsx"];
 
@@ -33,21 +35,33 @@ export default function withSolid(options: RollupOptions = {}) {
     );
   }
 
-  const defaultOptions: RollupOptions = {
+  const outputs: OutputOptions[] = [
+    {
+      format: "cjs",
+      dir: resolve("dist/cjs"),
+      sourcemap: true,
+    },
+    {
+      format: "esm",
+      dir: resolve("dist/esm"),
+      sourcemap: true,
+    },
+    {
+      format: "umd",
+      dir: resolve("dist/umd"),
+      sourcemap: true,
+      plugins: [terser()],
+    },
+  ];
+
+  const output: OutputOptions[] = outputs.filter(({ format }) =>
+    options.targets.includes(format as ModuleFormat)
+  );
+
+  const defaultOptions: Options = {
     input: resolve(src),
     external: ["solid-js", "solid-js/web", ...external],
-    output: [
-      {
-        format: "cjs",
-        dir: resolve("dist/cjs"),
-        sourcemap: true,
-      },
-      {
-        format: "esm",
-        dir: resolve("dist/esm"),
-        sourcemap: true,
-      },
-    ],
+    output,
     plugins: [
       {
         name: "clean",
@@ -98,16 +112,30 @@ export default function withSolid(options: RollupOptions = {}) {
               ".": {
                 solid: `./dist/source/${name}.jsx`,
                 import: `./dist/esm/${name}.js`,
-                browser: `./dist/esm/${name}.js`,
+                browser: `./dist/umd/${name}.js`,
                 require: `./dist/cjs/${name}.js`,
                 node: `./dist/cjs/${name}.js`,
               },
             },
           };
 
+          const hasFormat = (formats: ModuleFormat[]) => {
+            return output.find(({ format }) => formats.includes(format));
+          };
+
+          if (!hasFormat(["cjs", "commonjs"])) {
+            example.main = example.module;
+            example.exports["."].require = example.module;
+            example.exports["."].node = example.module;
+          }
+
+          if (!hasFormat(["umd"])) {
+            example.exports["."].browser = example.module;
+          }
+
           console.log();
           console.log(
-            c.cyan(c.bold("Add the following in your `package.json`:"))
+            c.cyan(c.bold("Example config for your `package.json`:"))
           );
           console.log();
           console.log(c.green(JSON.stringify(example, null, 2)));
@@ -118,4 +146,14 @@ export default function withSolid(options: RollupOptions = {}) {
   };
 
   return mergeAndConcat(options, defaultOptions);
+}
+
+export default function withSolid(options: Options | Options[] = {}) {
+  return Array.isArray(options)
+    ? options.map(processOptions)
+    : processOptions(options);
+}
+
+interface Options extends RollupOptions {
+  targets?: ModuleFormat[];
 }
