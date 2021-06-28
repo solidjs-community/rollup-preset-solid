@@ -205,7 +205,7 @@ export default function withSolid(options: Options | Options[] = {}) {
     : processOptions(options, false);
 }
 
-interface Options extends RollupOptions {
+export interface Options extends RollupOptions {
   /**
    * Defines which target you want
    * @default ['esm']
