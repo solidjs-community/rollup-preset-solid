@@ -26,19 +26,19 @@
   "author": "Alexandre Mouton-Brady",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "^7.13.10",
-    "@babel/preset-typescript": "^7.13.0",
+    "@babel/core": "^7.14.6",
+    "@babel/preset-typescript": "^7.14.5",
     "@rollup/plugin-babel": "^5.3.0",
-    "@rollup/plugin-node-resolve": "^11.2.0",
-    "babel-preset-solid": "^0.24.13",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "babel-preset-solid": "^1.0.0",
     "colorette": "^1.2.2",
-    "esbuild": "^0.9.5",
+    "esbuild": "^0.12.11",
     "merge-anything": "^4.0.1",
-    "rollup": "^2.42.1",
+    "rollup": "^2.52.3",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.2.3"
+    "typescript": "^4.3.4"
   },
   "devDependencies": {
-    "@types/node": "^14.14.35"
+    "@types/node": "^15.12.5"
   }
 }
