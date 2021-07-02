@@ -72,7 +72,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
 
   const defaultOptions: Options = {
     input: resolve(src),
-    external: ["solid-js", "solid-js/web", ...external],
+    external: ["solid-js", "solid-js/web", "solid-js/store", ...external],
     output,
     plugins: [
       babel({
