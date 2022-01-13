@@ -27,5 +27,5 @@ build({
 });
 
 exec(
-  `pnpx tsc src/index.ts --sourceMap --outDir dist/types --declaration --emitDeclarationOnly`
+  `pnpm dlx tsc src/index.ts --sourceMap --outDir dist/types --declaration --emitDeclarationOnly`
 );

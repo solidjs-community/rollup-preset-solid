@@ -29,7 +29,13 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
   const pkg = findClosestPackageJson(currentDir);
   const extensions = [".js", ".ts", ".jsx", ".tsx"];
 
-  const src = pkg.source || options.input;
+  const src = options.input || pkg.source;
+  if (!src) {
+    throw new Error(
+      'No input was provided. Please provide an input via the "input" option or via "source" in the package.json'
+    );
+  }
+
   const { name } = parse(src);
 
   const external = [
@@ -66,9 +72,9 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     },
   ];
 
-  const output: OutputOptions[] = outputs.filter(({ format }) =>
-    targets.includes(format as ModuleFormat)
-  );
+  const output: OutputOptions[] | OutputOptions =
+    rollupOptions.output ||
+    outputs.filter(({ format }) => targets.includes(format as ModuleFormat));
 
   const defaultOptions: Options = {
     input: resolve(src),
@@ -139,7 +145,9 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
           };
 
           const hasFormat = (formats: ModuleFormat[]) => {
-            return output.find(({ format }) => formats.includes(format));
+            return Array.isArray(output)
+              ? output.find(({ format }) => formats.includes(format))
+              : formats.includes(output.format);
           };
 
           if (!hasFormat(["cjs", "commonjs"])) {
