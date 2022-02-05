@@ -1,12 +1,12 @@
 import ts from "typescript";
 import { writeFileSync, rmSync } from "fs";
 import * as c from "colorette";
-import { babel, RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
 import { resolve, dirname, parse } from "path";
 import { mergeAndConcat } from "merge-anything";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { ModuleFormat, OutputOptions, RollupOptions } from "rollup";
+import { babel, RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
 
 function findClosestPackageJson(start = process.cwd(), level = 0) {
   try {
@@ -43,6 +43,8 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.peerDependencies || {}),
   ];
+
+  const babelTargets = pkg.browserslist || "default";
 
   if (!src) {
     throw new Error(
@@ -88,7 +90,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
         presets: [
           "babel-preset-solid",
           "@babel/preset-typescript",
-          ["@babel/preset-env", { bugfixes: true }],
+          ["@babel/preset-env", { bugfixes: true, targets: babelTargets }],
         ],
         ...babelOptions,
       }),
@@ -238,12 +240,13 @@ export interface Options extends RollupOptions {
   printInstructions?: boolean;
   /**
    * This can be used to override the default babel options
+   * The targets can be set in the "browserslist" field in your `package.json`.
    * Beware the options are only merged at the top level.
    * If you add babel presets you'll need to add the default one back (as you see fit).
    * @default {
    *   extensions,
    *   babelHelpers: "bundled",
-   *   presets: ["babel-preset-solid", "@babel/preset-typescript", ['@babel/preset-env', { bugfixes: true }]],
+   *   presets: ["babel-preset-solid", "@babel/preset-typescript", ['@babel/preset-env', { bugfixes: true, targets: "defaults" }]],
    * }
    */
   babelOptions?: RollupBabelInputPluginOptions;
