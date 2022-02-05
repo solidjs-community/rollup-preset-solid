@@ -44,7 +44,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     ...Object.keys(pkg.peerDependencies || {}),
   ];
 
-  const babelTargets = pkg.browserslist || "default";
+  const babelTargets = pkg.browserslist || "last 2 years";
 
   if (!src) {
     throw new Error(
@@ -246,7 +246,7 @@ export interface Options extends RollupOptions {
    * @default {
    *   extensions,
    *   babelHelpers: "bundled",
-   *   presets: ["babel-preset-solid", "@babel/preset-typescript", ['@babel/preset-env', { bugfixes: true, targets: "defaults" }]],
+   *   presets: ["babel-preset-solid", "@babel/preset-typescript", ['@babel/preset-env', { bugfixes: true, targets: "last 2 years" }]],
    * }
    */
   babelOptions?: RollupBabelInputPluginOptions;
