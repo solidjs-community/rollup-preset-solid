@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { writeFileSync, rmSync } from "fs";
 import * as c from "colorette";
-import { babel } from "@rollup/plugin-babel";
+import { babel, RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
 import { resolve, dirname, parse } from "path";
 import { mergeAndConcat } from "merge-anything";
@@ -22,6 +22,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     targets: buildTargets,
     writePackageJson,
     printInstructions,
+    babelOptions,
     ...rollupOptions
   } = options;
   const currentDir = process.cwd();
@@ -84,7 +85,12 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
       babel({
         extensions,
         babelHelpers: "bundled",
-        presets: ["babel-preset-solid", "@babel/preset-typescript"],
+        presets: [
+          "babel-preset-solid",
+          "@babel/preset-typescript",
+          ["@babel/preset-env", { bugfixes: true }],
+        ],
+        ...babelOptions,
       }),
       nodeResolve({ extensions }),
       {
@@ -230,4 +236,15 @@ export interface Options extends RollupOptions {
    * @default false
    */
   printInstructions?: boolean;
+  /**
+   * This can be used to override the default babel options
+   * Beware the options are only merged at the top level.
+   * If you add babel presets you'll need to add the default one back (as you see fit).
+   * @default {
+   *   extensions,
+   *   babelHelpers: "bundled",
+   *   presets: ["babel-preset-solid", "@babel/preset-typescript", ['@babel/preset-env', { bugfixes: true }]],
+   * }
+   */
+  babelOptions?: RollupBabelInputPluginOptions;
 }
