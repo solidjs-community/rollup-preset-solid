@@ -23,6 +23,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     writePackageJson,
     printInstructions,
     babelOptions,
+    solidOptions,
     ...rollupOptions
   } = options;
   const currentDir = process.cwd();
@@ -88,7 +89,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
         extensions,
         babelHelpers: "bundled",
         presets: [
-          "babel-preset-solid",
+          ["babel-preset-solid", solidOptions || {}],
           "@babel/preset-typescript",
           ["@babel/preset-env", { bugfixes: true, targets: babelTargets }],
         ],
@@ -250,4 +251,62 @@ export interface Options extends RollupOptions {
    * }
    */
   babelOptions?: RollupBabelInputPluginOptions;
+  solidOptions?: SolidOptions;
+}
+
+interface SolidOptions {
+  /**
+   * The name of the runtime module to import the methods from.
+   *
+   * @default "solid-js/web"
+   */
+  moduleName?: string;
+
+  /**
+   * The output mode of the compiler.
+   * Can be:
+   * - "dom" is standard output
+   * - "ssr" is for server side rendering of strings.
+   *
+   * @default "dom"
+   */
+  generate?: "ssr" | "dom";
+
+  /**
+   * Indicate whether the output should contain hydratable markers.
+   *
+   * @default false
+   */
+  hydratable?: boolean;
+
+  /**
+   * Boolean to indicate whether to enable automatic event delegation on camelCase.
+   *
+   * @default true
+   */
+  delegateEvents?: boolean;
+
+  /**
+   * Boolean indicates whether smart conditional detection should be used.
+   * This optimizes simple boolean expressions and ternaries in JSX.
+   *
+   * @default true
+   */
+  wrapConditionals?: boolean;
+
+  /**
+   * Boolean indicates whether to set current render context on Custom Elements and slots.
+   * Useful for seemless Context API with Web Components.
+   *
+   * @default true
+   */
+  contextToCustomElements?: boolean;
+
+  /**
+   * Array of Component exports from module, that aren't included by default with the library.
+   * This plugin will automatically import them if it comes across them in the JSX.
+   *
+   * @default ["For","Show","Switch","Match","Suspense","SuspenseList","Portal","Index","Dynamic","ErrorBoundary"]
+   */
+  builtIns?: string[];
 }
