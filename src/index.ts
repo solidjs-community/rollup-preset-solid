@@ -24,6 +24,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     printInstructions,
     babelOptions,
     solidOptions,
+    mappingName,
     ...rollupOptions
   } = options;
   const currentDir = process.cwd();
@@ -38,7 +39,8 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     );
   }
 
-  const { name } = parse(src);
+  const { name: srcName } = parse(src);
+  const name = mappingName || srcName;
 
   const external = [
     ...Object.keys(pkg.dependencies || {}),
@@ -252,6 +254,10 @@ export interface Options extends RollupOptions {
    */
   babelOptions?: RollupBabelInputPluginOptions;
   solidOptions?: SolidOptions;
+  /**
+   * TODO: Document this
+   */
+  mappingName?: string;
 }
 
 interface SolidOptions {
