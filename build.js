@@ -1,8 +1,9 @@
 const { rmSync } = require("fs");
 const { resolve } = require("path");
 const { build } = require("esbuild");
-const pkg = require("./package.json");
 const { exec } = require("child_process");
+
+const pkg = require("./package.json");
 
 rmSync(resolve(__dirname, "dist"), { force: true, recursive: true });
 
@@ -27,5 +28,5 @@ build({
 });
 
 exec(
-  `pnpm dlx tsc src/index.ts --sourceMap --outDir dist/types --declaration --emitDeclarationOnly`
+  `pnpm tsc src/index.ts --sourceMap --outDir dist/types --declaration --emitDeclarationOnly`
 );
