@@ -1,4 +1,8 @@
-# rollup-preset-solid
+<p>
+  <img width="100%" src="https://assets.solidjs.com/banner?type=Rollup%20Preset&background=tiles&project=%20" alt="Solid Rollup Preset">
+</p>
+
+# Solid Rollup Preset
 
 A small opinionated preset for rollup to bundle your [solid](https://github.com/ryansolid/solid) libraries with rollup.
 
