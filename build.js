@@ -1,9 +1,12 @@
-const { rmSync } = require("fs");
-const { resolve } = require("path");
-const { build } = require("esbuild");
-const { exec } = require("child_process");
+import { rmSync } from "fs";
+import { resolve, dirname } from "path";
+import { build } from "esbuild";
+import { exec } from "child_process";
+import { fileURLToPath } from "url";
 
-const pkg = require("./package.json");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+import pkg from "./package.json" assert { type: "json" };
 
 rmSync(resolve(__dirname, "dist"), { force: true, recursive: true });
 

@@ -1,12 +1,12 @@
-import ts from "typescript";
-import { writeFileSync, rmSync } from "fs";
+import { rmSync } from "fs";
 import * as c from "colorette";
-import { terser } from "rollup-plugin-terser";
 import { resolve, dirname, parse } from "path";
 import { mergeAndConcat } from "merge-anything";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
-import { ModuleFormat, OutputOptions, RollupOptions } from "rollup";
+import { RollupOptions } from "rollup";
 import { babel, RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
+import ts from "rollup-plugin-ts";
+import { preppy } from "./preppy";
 
 function findClosestPackageJson(start = process.cwd(), level = 0) {
   try {
@@ -17,10 +17,9 @@ function findClosestPackageJson(start = process.cwd(), level = 0) {
   }
 }
 
-function processOptions(options: Options, asSubPackage = true): RollupOptions {
+function processOptions(options: Options, asSubPackage = true): RollupOptions[] {
   const {
-    targets: buildTargets,
-    writePackageJson,
+    sourcemap,
     printInstructions,
     babelOptions,
     solidOptions,
@@ -28,7 +27,6 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     ...rollupOptions
   } = options;
   const currentDir = process.cwd();
-  const targets = buildTargets || ["esm"];
   const pkg = findClosestPackageJson(currentDir);
   const extensions = [".js", ".ts", ".jsx", ".tsx"];
 
@@ -43,6 +41,9 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
   const name = mappingName || srcName;
 
   const external = [
+    "solid-js",
+    "solid-js/web",
+    "solid-js/store",
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.peerDependencies || {}),
   ];
@@ -55,69 +56,27 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     );
   }
 
-  const outputs: OutputOptions[] = [
-    {
-      format: "cjs",
-      file: asSubPackage ? resolve(`dist/${name}/index.common.js`) : undefined,
-      dir: asSubPackage ? undefined : resolve("dist/cjs"),
-      sourcemap: true,
-    },
-    {
-      format: "esm",
-      file: asSubPackage ? resolve(`dist/${name}/index.module.js`) : undefined,
-      dir: asSubPackage ? undefined : resolve("dist/esm"),
-      sourcemap: true,
-    },
-    {
-      name,
-      format: "umd",
-      file: asSubPackage ? resolve(`dist/${name}/index.umd.js`) : undefined,
-      dir: asSubPackage ? undefined : resolve("dist/umd"),
-      sourcemap: true,
-      plugins: [terser()],
-    },
-  ];
-
-  const output: OutputOptions[] | OutputOptions =
-    rollupOptions.output ||
-    outputs.filter(({ format }) => targets.includes(format as ModuleFormat));
-
-  const defaultOptions: Options = {
+  const defaultOptions: RollupOptions = {
     input: resolve(src),
-    external: ["solid-js", "solid-js/web", "solid-js/store", ...external],
-    output,
+    external,
+    output: {
+      format: "esm",
+      dir: resolve(`dist/es/${asSubPackage ? name : ""}`),
+      sourcemap,
+    },
     plugins: [
+      ts({}),
       babel({
         extensions,
         babelHelpers: "bundled",
         presets: [
           ["babel-preset-solid", solidOptions || {}],
-          "@babel/preset-typescript",
+          ["@babel/preset-typescript", { jsx: "preserve" }],
           ["@babel/preset-env", { bugfixes: true, targets: babelTargets }],
         ],
         ...babelOptions,
       }),
       nodeResolve({ extensions }),
-      {
-        name: "ts",
-        buildEnd() {
-          const program = ts.createProgram([resolve(src)], {
-            target: ts.ScriptTarget.ESNext,
-            module: ts.ModuleKind.ESNext,
-            moduleResolution: ts.ModuleResolutionKind.NodeJs,
-            jsx: ts.JsxEmit.Preserve,
-            jsxImportSource: "solid-js",
-            allowSyntheticDefaultImports: true,
-            esModuleInterop: true,
-            outDir: asSubPackage ? `dist/${name}` : `dist/source`,
-            declarationDir: asSubPackage ? `dist/${name}` : `dist/types`,
-            declaration: true,
-            allowJs: true,
-          });
-
-          program.emit();
-        },
-      },
       {
         name: "instructions",
         buildEnd() {
@@ -125,51 +84,32 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
 
           const example = {
             files: ["dist"],
-            main: asSubPackage
-              ? `dist/${name}/index.common.js`
-              : `dist/cjs/${name}.js`,
             module: asSubPackage
-              ? `dist/${name}/index.module.js`
-              : `dist/esm/${name}.js`,
+              ? `dist/es/${name}/index.js`
+              : `dist/es/${name}.js`,
+            main: "",
             types: asSubPackage
               ? `dist/${name}/${name}.d.ts`
               : `dist/types/${name}.d.ts`,
             exports: {
               ".": {
                 solid: asSubPackage
-                  ? `./dist/${name}/${name}.jsx`
-                  : `./dist/source/${name}.jsx`,
+                  ? `./dist/jsx/${name}/index.jsx`
+                  : `./dist/jsx/${name}.jsx`,
                 import: asSubPackage
-                  ? `./dist/${name}/index.module.js`
-                  : `./dist/esm/${name}.js`,
-                browser: asSubPackage
-                  ? `./dist/${name}/index.umd.js`
-                  : `./dist/umd/${name}.js`,
-                require: asSubPackage
-                  ? `./dist/${name}/index.common.js`
-                  : `./dist/cjs/${name}.js`,
-                node: asSubPackage
-                  ? `./dist/${name}/index.common.js`
-                  : `./dist/cjs/${name}.js`,
+                  ? `./dist/es/${name}/index.js`
+                  : `./dist/es/${name}.js`,
+                require: "",
+                node: "",
+                browser: "",
               },
             },
           };
 
-          const hasFormat = (formats: ModuleFormat[]) => {
-            return Array.isArray(output)
-              ? output.find(({ format }) => formats.includes(format))
-              : formats.includes(output.format);
-          };
-
-          if (!hasFormat(["cjs", "commonjs"])) {
-            example.main = example.module;
-            example.exports["."].require = example.exports["."].import;
-            example.exports["."].node = example.exports["."].import;
-          }
-
-          if (!hasFormat(["umd"])) {
-            example.exports["."].browser = example.exports["."].import;
-          }
+          example.main = example.module;
+          example.exports["."].require = example.exports["."].import;
+          example.exports["."].node = example.exports["."].import;
+          example.exports["."].browser = example.exports["."].import;
 
           console.log();
           console.log(
@@ -180,37 +120,37 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
           console.log();
         },
       },
-      {
-        name: "generate",
-        buildEnd() {
-          if (!writePackageJson) return;
-
-          const build = {
-            main: `index.common.js`,
-            module: `index.module.js`,
-            types: `${name}.d.ts`,
-            exports: {
-              ".": {
-                solid: `./${name}.jsx`,
-                import: `./index.module.js`,
-                browser: `./index.umd.js`,
-                require: `./index.common.js`,
-                node: `./index.common.js`,
-              },
-            },
-          };
-
-          writeFileSync(
-            resolve(currentDir, "dist", name, "package.json"),
-            JSON.stringify(build, null, 2),
-            { encoding: "utf8" }
-          );
-        },
-      },
     ],
   };
 
-  return mergeAndConcat(rollupOptions, defaultOptions) as RollupOptions;
+  const jsxOptions: RollupOptions = {
+    input: resolve(src),
+    external,
+    output: {
+      format: "esm",
+      dir: resolve(`dist/jsx/${asSubPackage ? name : ""}`),
+      entryFileNames: "[name].jsx",
+      sourcemap,
+    },
+    plugins: [
+      babel({
+        extensions,
+        babelHelpers: "bundled",
+        presets: [
+          ["@babel/preset-typescript", { jsx: "preserve" }],
+          ["@babel/preset-env", { bugfixes: true, targets: babelTargets }],
+        ],
+        ...babelOptions,
+      }),
+      preppy,
+      nodeResolve({ extensions }),
+    ],
+  };
+
+  return [
+    mergeAndConcat(rollupOptions, defaultOptions) as RollupOptions,
+    mergeAndConcat(rollupOptions, jsxOptions) as RollupOptions,
+  ];
 }
 
 export default function withSolid(options: Options | Options[] = {}) {
@@ -220,22 +160,16 @@ export default function withSolid(options: Options | Options[] = {}) {
   });
 
   return Array.isArray(options)
-    ? options.map((option) => processOptions(option, true))
+    ? options.flatMap((option) => processOptions(option, true))
     : processOptions(options, false);
 }
 
 export interface Options extends RollupOptions {
   /**
-   * Defines which target you want
-   * @default ['esm']
-   */
-  targets?: ModuleFormat[];
-  /**
-   * Whether to generate a package.json or not
-   * This is useful for sub packages
+   * Whether to output sourcemaps or not
    * @default false
    */
-  writePackageJson?: boolean;
+  sourcemap?: boolean;
   /**
    * Whether to hint what to put in your package.json or not
    * @default false
