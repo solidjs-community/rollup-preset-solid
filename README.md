@@ -12,7 +12,7 @@ Features out of the box:
 - Minimal - two lines config
 - No lock-in - you are in total control of the rollup config
 - Best practices for publishing solid libraries by compiling for `esm`, `cjs`, `jsx`, `umd` and `tsc`
-- Automatically clean `dist` fodler on build
+- Automatically clean `dist` folder on build
 
 ## Usage
 
