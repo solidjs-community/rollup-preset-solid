@@ -33,6 +33,24 @@ import withSolid from "rollup-preset-solid";
 export default withSolid();
 ```
 
+In case you want to use rollup-preset-solid inside an existing vite project, you need to use in your vite config:
+
+```js
+// vite.config.js
+import withSolid from "rollup-preset-solid";
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
+
+export default defineConfig({
+  plugins: [solidPlugin()],
+  build: {
+    rollupOptions: withSolid()
+  }
+});
+```
+
+In this case, the index.html can include its dependencies also from a different location than the library, so the entry point for the build differs from the dev view.
+
 3. Configure your package.json
 
 ```json
