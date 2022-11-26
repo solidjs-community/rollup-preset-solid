@@ -1,21 +1,22 @@
 {
   "name": "rollup-preset-solid",
-  "version": "1.4.0",
+  "version": "2.0.0",
+  "type": "module",
   "description": "Rollup preset for solid libraries",
   "files": [
     "dist"
   ],
-  "main": "dist/cjs/index.js",
+  "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "exports": {
     "import": "./dist/esm/index.js",
-    "node": "./dist/cjs/index.js",
-    "default": "./dist/cjs/index.js",
-    "require": "./dist/cjs/index.js"
+    "node": "./dist/esm/index.js",
+    "default": "./dist/esm/index.js",
+    "require": "./dist/esm/index.js"
   },
   "types": "dist/types/index.d.ts",
   "scripts": {
-    "build": "node build",
+    "build": "jiti scripts/build",
     "prepublishOnly": "pnpm build"
   },
   "keywords": [
@@ -26,20 +27,21 @@
   "author": "Alexandre Mouton-Brady",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "^7.17.5",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
-    "@rollup/plugin-babel": "^5.3.1",
-    "@rollup/plugin-node-resolve": "^13.1.3",
-    "babel-preset-solid": "^1.3.6",
-    "colorette": "^2.0.16",
-    "esbuild": "^0.14.23",
-    "merge-anything": "^5.0.2",
-    "rollup": "^2.68.0",
-    "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.5.5"
+    "@babel/core": "^7.20.2",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-typescript": "^7.18.6",
+    "@rollup/plugin-babel": "^6.0.3",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-terser": "^0.1.0",
+    "babel-preset-solid": "^1.6.2",
+    "colorette": "^2.0.19",
+    "esbuild": "^0.15.15",
+    "merge-anything": "^5.1.3",
+    "rollup": "^3.4.0",
+    "typescript": "^4.9.3"
   },
   "devDependencies": {
-    "@types/node": "^17.0.21"
+    "@types/node": "^18.11.9",
+    "jiti": "^1.16.0"
   }
 }

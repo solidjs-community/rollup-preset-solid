@@ -1,7 +1,7 @@
 import ts from "typescript";
-import { writeFileSync, rmSync } from "fs";
 import * as c from "colorette";
-import { terser } from "rollup-plugin-terser";
+import { writeFileSync, rmSync } from "fs";
+import terser from "@rollup/plugin-terser";
 import { resolve, dirname, parse } from "path";
 import { mergeAndConcat } from "merge-anything";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
@@ -157,8 +157,8 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
 
           const hasFormat = (formats: ModuleFormat[]) => {
             return Array.isArray(output)
-              ? output.find(({ format }) => formats.includes(format))
-              : formats.includes(output.format);
+              ? output.find(({ format }) => format && formats.includes(format))
+              : output.format && formats.includes(output.format);
           };
 
           if (!hasFormat(["cjs", "commonjs"])) {
