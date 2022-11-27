@@ -1,17 +1,19 @@
 import ts from "typescript";
 import * as c from "colorette";
-import { writeFileSync, rmSync } from "fs";
+import { cwd } from "node:process";
 import terser from "@rollup/plugin-terser";
-import { resolve, dirname, parse } from "path";
 import { mergeAndConcat } from "merge-anything";
+import { resolve, dirname, parse } from "node:path";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import { writeFileSync, rmSync, readFileSync } from "node:fs";
 import { ModuleFormat, OutputOptions, RollupOptions } from "rollup";
 import { babel, RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
 
-function findClosestPackageJson(start = process.cwd(), level = 0) {
+function findClosestPackageJson(start = cwd(), level = 0) {
   try {
     const path = resolve(start, "package.json");
-    return require(path);
+    const content = readFileSync(path, { encoding: "utf8" });
+    return JSON.parse(content);
   } catch {
     return level >= 10 ? {} : findClosestPackageJson(dirname(start), level + 1);
   }
@@ -214,7 +216,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
 }
 
 export default function withSolid(options: Options | Options[] = {}) {
-  rmSync(resolve(process.cwd(), "dist"), {
+  rmSync(resolve(cwd(), "dist"), {
     force: true,
     recursive: true,
   });
