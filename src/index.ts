@@ -27,6 +27,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     babelOptions,
     solidOptions,
     mappingName,
+    tsCompilerOptions,
     ...rollupOptions
   } = options;
   const currentDir = process.cwd();
@@ -115,6 +116,7 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
             declarationDir: asSubPackage ? `dist/${name}` : `dist/types`,
             declaration: true,
             allowJs: true,
+            ...tsCompilerOptions
           });
 
           program.emit();
@@ -260,6 +262,10 @@ export interface Options extends RollupOptions {
    * TODO: Document this
    */
   mappingName?: string;
+  /**
+   * Additional TypeScript compiler options
+   */
+  tsCompilerOptions?: ts.CompilerOptions;
 }
 
 interface SolidOptions {
