@@ -109,6 +109,28 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
         ...babelOptions,
       }),
       nodeResolve({ extensions }),
+      // New plugin to fix local import file extensions for node16/nodenext resolution
+      {
+        name: "fix-import-extensions",
+        transform(code, id) {
+          if (!id.endsWith(".ts") && !id.endsWith(".tsx")) return null;
+
+          const expectedExt = id.endsWith(".tsx") ? ".jsx" : ".js";
+
+          // Fix relative imports: match import/export and dynamic imports
+          const fixedCode = code.replace(
+            /(import(?:\s+.*?\s+from\s+)|import\()(['"])(\.\/[^'"]+?)(?:(\.ts|\.tsx))?(['"])/g,
+            (_m, prefix, quote, path, ext, quote2) => {
+              const newPath = ext
+                ? path.slice(0, -ext.length) + expectedExt
+                : path + expectedExt;
+
+              return `${prefix}${quote}${newPath}${quote2}`;
+            }
+          );
+          return { code: fixedCode, map: null };
+        },
+      },
       {
         name: "ts",
         buildEnd() {
