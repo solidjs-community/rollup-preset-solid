@@ -6,10 +6,13 @@ import { mergeAndConcat } from "merge-anything";
 import { resolve, dirname, parse } from "node:path";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { writeFileSync, rmSync, readFileSync } from "node:fs";
-import { ModuleFormat, OutputOptions, RollupOptions } from "rollup";
-import { babel, RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
+import type { ModuleFormat, OutputOptions, RollupOptions } from "rollup";
+import {
+  babel,
+  type RollupBabelInputPluginOptions,
+} from "@rollup/plugin-babel";
 
-function findClosestPackageJson(start = cwd(), level = 0) {
+function findClosestPackageJson(start = cwd(), level = 0): Record<string, any> {
   try {
     const path = resolve(start, "package.json");
     const content = readFileSync(path, { encoding: "utf8" });
