@@ -106,3 +106,48 @@ export default withSolid([
   { input: "server.ts", targets: ["esm", "cjs"], writePackageJson: true },
 ]);
 ```
+
+#### IIFE Builds
+
+When building with the IIFE format, the preset marks certain Solid packages (such as `"solid-js"`, `"solid-js/web"`, and `"solid-js/store"`) as external by default. This means they are not bundled into your output and instead are expected to be provided as globals. You have two options:
+
+1. **Bundle the Solid Modules**  
+   Override the external list so that these modules are included in your IIFE bundle. For example:
+
+   ```js
+   // rollup.config.js
+   import withSolid from "rollup-preset-solid";
+
+   export default withSolid({
+     input: "App.tsx",
+     external: [], // Override default externals to bundle everything
+     output: {
+       dir: "dist",
+       format: "iife",
+       sourcemap: false,
+     },
+   });
+   ```
+
+2. **Provide Global Mappings**  
+   Keep the modules external and specify globals by using the `globals` option. For example:
+
+   ```js
+   // rollup.config.js
+   import withSolid from "rollup-preset-solid";
+
+   export default withSolid({
+     input: "App.tsx",
+     output: {
+       dir: "dist",
+       format: "iife",
+       sourcemap: false,
+       globals: {
+         "solid-js/web": "SolidWeb",
+         // add mappings for "solid-js" and "solid-js/store" if needed
+       },
+     },
+   });
+   ```
+
+Internally the preset adds these packages to the default `external` array by reading your package's dependencies and peerDependencies. For IIFE builds you must either bundle them or provide the expected globals. This ensures that your browser bundle works as intended.
