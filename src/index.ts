@@ -44,7 +44,13 @@ function processOptions(options: Options, asSubPackage = true): RollupOptions {
     );
   }
 
-  const { name: srcName } = parse(src);
+  const { name: srcName, ext } = parse(src);
+  if (![".tsx", ".jsx"].includes(ext)) {
+    console.warn(
+      "[rollup-preset-solid] Warning: Your entry file does not have a .tsx/.jsx extension. " +
+        "This may cause the dist/source output to be generated as .js instead of .jsx."
+    );
+  }
   const name = mappingName || srcName;
 
   const external = [
